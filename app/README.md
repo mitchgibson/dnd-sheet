@@ -1,42 +1,60 @@
-# dnd character sheet
+# D&D 2024 Character Sheet
 
-This template should help get you started developing with Vue 3 in Vite.
+A modern, interactive character sheet for Dungeons & Dragons 2024, built with Vue 3, TypeScript, and Tailwind CSS. This application features a local file-based storage system, allowing you to manage multiple characters with ease.
 
-## Recommended IDE Setup
+## Features
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Recommended Browser Setup
-
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
+- **2024 Rulesset**: Updated for the latest D&D 2024 rules.
+- **File-Based Storage**: Characters are saved as JSON files in the `app/characters` directory giving you full control over your data.
+- **Auto-Save**: Changes are automatically saved after 1 second of inactivity.
+- **Multiple Characters**: Create, load, and manage unlimited characters.
+- **Smart Validation**: Prevents accidental overwrites and handles file renaming.
+- **Clean UI**: Tabbed interface for easy navigation (Stats, Combat, Spells, Notes).
+- **Interactive Elements**:
+  - Clickable skills and saving throws to toggle proficiency/expertise.
+  - Spell slot tracking.
+  - Death save tracking.
+  - Spell notes with counters.
 
 ## Project Setup
+
+This project consists of a Vue 3 frontend and a lightweight Express backend for file operations.
 
 ```sh
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+### Run for Development
+
+To start the application, simply run:
 
 ```sh
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+This command uses `concurrently` to start both:
+1.  **Backend API**: Running on `http://localhost:3001` (Handles file I/O)
+2.  **Frontend**: Running on `http://localhost:5173` (The UI)
+
+### Building for Production
 
 ```sh
 npm run build
 ```
+
+## Data Storage
+
+Character data is stored in the `characters/` directory at the project root.
+-   **Format**: JSON
+-   **Filename**: derived from the character name (e.g., `Gandalf_the_Grey.json`)
+
+You can back up, share, or edit these files directly if needed.
+
+## Tech Stack
+
+-   **Framework**: Vue 3 (Script Setup)
+-   **Language**: TypeScript
+-   **Build Tool**: Vite
+-   **Styling**: Tailwind CSS + Custom CSS
+-   **State Management**: Pinia
+-   **Backend**: Node.js + Express
