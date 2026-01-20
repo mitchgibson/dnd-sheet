@@ -183,6 +183,7 @@ export const useCharacterStore = defineStore('character', () => {
 
     async function loadCharacter(fileName: string) {
         isLoading.value = true
+        nameError.value = ''
         try {
             const res = await fetch(`${API_BASE}/characters/${fileName}`)
             if (res.ok) {
@@ -269,6 +270,7 @@ export const useCharacterStore = defineStore('character', () => {
         character.value = createDefaultCharacter()
         currentFileName.value = ''
         lastSaved.value = null
+        nameError.value = ''
     }
 
     function addAttack() {

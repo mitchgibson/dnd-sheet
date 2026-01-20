@@ -65,9 +65,11 @@ app.post('/api/characters/:name', (req, res) => {
     const filePath = path.join(CHARACTERS_DIR, `${fileName}.json`);
     const currentFileName = req.query.current; // Pass current file name to allow updating same file
 
-    // If file exists and it's not our current file, reject to prevent overwrite
-    if (fs.existsSync(filePath) && currentFileName && sanitizeName(currentFileName) !== fileName) {
-        return res.status(409).json({ error: 'A character with this name already exists', exists: true });
+    // If file exists and it's not our current file (or we don't have a current file), reject
+    if (fs.existsSync(filePath)) {
+        if (!currentFileName || sanitizeName(currentFileName) !== fileName) {
+            return res.status(409).json({ error: 'A character with this name already exists', exists: true });
+        }
     }
 
     try {
