@@ -1,9 +1,16 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import type { Character, AbilityScores, Spell } from '@/types/character'
+import type { Character, AbilityScores } from '@/types/character'
 import { SKILLS, calculateModifier, calculateProficiencyBonus } from '@/types/character'
 
-const STORAGE_KEY = 'dnd-character-sheet'
+const API_BASE = 'http://localhost:3001/api'
+
+export interface CharacterListItem {
+    name: string
+    class: string
+    level: number
+    fileName: string
+}
 
 function createDefaultAbilityScores(): AbilityScores {
     const defaultAbility = {
@@ -24,16 +31,13 @@ function createDefaultAbilityScores(): AbilityScores {
 
 function createDefaultCharacter(): Character {
     return {
-        // Header
-        name: '',
+        name: 'New Character',
         background: '',
         class: '',
         species: '',
         subclass: '',
         level: 1,
         experiencePoints: 0,
-
-        // Core stats
         proficiencyBonus: 2,
         heroicInspiration: false,
         abilityScores: createDefaultAbilityScores(),
@@ -43,8 +47,6 @@ function createDefaultCharacter(): Character {
             expertise: false,
             bonus: 0,
         })),
-
-        // Combat
         combat: {
             armorClass: 10,
             shield: 0,
@@ -61,16 +63,10 @@ function createDefaultCharacter(): Character {
             deathSaveSuccesses: 0,
             deathSaveFailures: 0,
         },
-
-        // Attacks
         attacks: [],
-
-        // Features
         classFeatures: '',
         speciesTraits: '',
         feats: '',
-
-        // Proficiencies
         equipmentProficiencies: {
             armorLight: false,
             armorMedium: false,
@@ -79,8 +75,6 @@ function createDefaultCharacter(): Character {
             weapons: '',
             tools: '',
         },
-
-        // Spellcasting
         spellcasting: {
             ability: '',
             spellcastingModifier: 0,
@@ -99,23 +93,9 @@ function createDefaultCharacter(): Character {
             },
             spells: [],
         },
-
-        // Equipment
         equipment: '',
-        magicItemAttunement: {
-            slot1: '',
-            slot2: '',
-            slot3: '',
-        },
-        coins: {
-            copper: 0,
-            silver: 0,
-            electrum: 0,
-            gold: 0,
-            platinum: 0,
-        },
-
-        // Personality
+        magicItemAttunement: { slot1: '', slot2: '', slot3: '' },
+        coins: { copper: 0, silver: 0, electrum: 0, gold: 0, platinum: 0 },
         personality: {
             backstoryAndPersonality: '',
             appearance: '',
@@ -126,28 +106,48 @@ function createDefaultCharacter(): Character {
 }
 
 export const useCharacterStore = defineStore('character', () => {
-    const character = ref<Character>(loadFromStorage() || createDefaultCharacter())
+    const CURRENT_CHAR_KEY = 'dnd-current-character'
+
+    const character = ref<Character>(createDefaultCharacter())
+    const characters = ref<CharacterListItem[]>([])
+    const currentFileName = ref<string>(localStorage.getItem(CURRENT_CHAR_KEY) || '')
     const lastSaved = ref<Date | null>(null)
+    const isLoading = ref(false)
+    const nameError = ref<string>('')
 
     const proficiencyBonus = computed(() =>
         calculateProficiencyBonus(character.value.level)
     )
 
+    // Persist current character to localStorage
+    watch(currentFileName, (newVal) => {
+        if (newVal) {
+            localStorage.setItem(CURRENT_CHAR_KEY, newVal)
+        } else {
+            localStorage.removeItem(CURRENT_CHAR_KEY)
+        }
+    })
+
+    // Debounced auto-save
+    let saveTimeout: ReturnType<typeof setTimeout> | null = null
+
     watch(
         character,
-        (newValue) => {
+        () => {
             updateDerivedValues()
-            saveToStorage(newValue)
-            lastSaved.value = new Date()
+            // Auto-save after 1 second of no changes
+            if (saveTimeout) clearTimeout(saveTimeout)
+            if (currentFileName.value || character.value.name.trim()) {
+                saveTimeout = setTimeout(() => {
+                    autoSave()
+                }, 1000)
+            }
         },
         { deep: true }
     )
 
     function updateDerivedValues() {
-        // Update proficiency bonus based on level
         character.value.proficiencyBonus = calculateProficiencyBonus(character.value.level)
-
-        // Update ability modifiers and saving throws
         const abilities = character.value.abilityScores
         for (const key of Object.keys(abilities) as (keyof AbilityScores)[]) {
             abilities[key].modifier = calculateModifier(abilities[key].score)
@@ -155,8 +155,6 @@ export const useCharacterStore = defineStore('character', () => {
                 abilities[key].modifier +
                 (abilities[key].savingThrowProficiency ? character.value.proficiencyBonus : 0)
         }
-
-        // Update skill bonuses
         for (const skill of character.value.skills) {
             const abilityMod = abilities[skill.ability].modifier
             let bonus = abilityMod
@@ -167,40 +165,110 @@ export const useCharacterStore = defineStore('character', () => {
             }
             skill.bonus = bonus
         }
-
-        // Update passive perception
         const perceptionSkill = character.value.skills.find(s => s.name === 'Perception')
         character.value.combat.passivePerception = 10 + (perceptionSkill?.bonus || abilities.wisdom.modifier)
-
-        // Update initiative (DEX modifier)
         character.value.combat.initiative = abilities.dexterity.modifier
     }
 
-    function loadFromStorage(): Character | null {
+    async function listCharacters() {
         try {
-            const stored = localStorage.getItem(STORAGE_KEY)
-            if (stored) {
-                const parsed = JSON.parse(stored)
-                // Merge with defaults to handle schema changes
-                return { ...createDefaultCharacter(), ...parsed }
+            const res = await fetch(`${API_BASE}/characters`)
+            if (res.ok) {
+                characters.value = await res.json()
             }
         } catch (e) {
-            console.error('Failed to load character from storage:', e)
+            console.error('Failed to list characters:', e)
         }
-        return null
     }
 
-    function saveToStorage(char: Character) {
+    async function loadCharacter(fileName: string) {
+        isLoading.value = true
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(char))
+            const res = await fetch(`${API_BASE}/characters/${fileName}`)
+            if (res.ok) {
+                const data = await res.json()
+                character.value = { ...createDefaultCharacter(), ...data }
+                currentFileName.value = fileName
+                updateDerivedValues()
+            }
         } catch (e) {
-            console.error('Failed to save character to storage:', e)
+            console.error('Failed to load character:', e)
+        } finally {
+            isLoading.value = false
         }
     }
 
-    function resetCharacter() {
+    async function autoSave() {
+        if (!character.value.name.trim()) return
+
+        const newFileName = character.value.name.replace(/[^a-zA-Z0-9_-]/g, '_')
+
+        // Clear any previous error
+        nameError.value = ''
+
+        try {
+            // If we have a current file and the name changed, use rename endpoint
+            if (currentFileName.value && currentFileName.value !== newFileName) {
+                const res = await fetch(`${API_BASE}/characters/${currentFileName.value}/rename/${newFileName}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(character.value)
+                })
+
+                if (res.ok) {
+                    currentFileName.value = newFileName
+                    lastSaved.value = new Date()
+                    await listCharacters()
+                } else if (res.status === 409) {
+                    // Name conflict - show error
+                    nameError.value = 'A character with this name already exists'
+                }
+            } else {
+                // Normal save (new character or same name)
+                const res = await fetch(`${API_BASE}/characters/${newFileName}?current=${currentFileName.value || ''}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(character.value)
+                })
+
+                if (res.ok) {
+                    currentFileName.value = newFileName
+                    lastSaved.value = new Date()
+                    // Refresh list if new character
+                    if (!characters.value.find(c => c.fileName === newFileName)) {
+                        await listCharacters()
+                    }
+                } else if (res.status === 409) {
+                    nameError.value = 'A character with this name already exists'
+                }
+            }
+        } catch (e) {
+            console.error('Failed to auto-save:', e)
+        }
+    }
+
+    async function deleteCharacter(fileName: string) {
+        try {
+            const res = await fetch(`${API_BASE}/characters/${fileName}`, {
+                method: 'DELETE'
+            })
+            if (res.ok) {
+                await listCharacters()
+                if (currentFileName.value === fileName) {
+                    newCharacter()
+                }
+                return true
+            }
+        } catch (e) {
+            console.error('Failed to delete character:', e)
+        }
+        return false
+    }
+
+    function newCharacter() {
         character.value = createDefaultCharacter()
-        localStorage.removeItem(STORAGE_KEY)
+        currentFileName.value = ''
+        lastSaved.value = null
     }
 
     function addAttack() {
@@ -215,9 +283,7 @@ export const useCharacterStore = defineStore('character', () => {
 
     function removeAttack(id: string) {
         const index = character.value.attacks.findIndex((a) => a.id === id)
-        if (index !== -1) {
-            character.value.attacks.splice(index, 1)
-        }
+        if (index !== -1) character.value.attacks.splice(index, 1)
     }
 
     function addSpell(level: number = 0) {
@@ -236,19 +302,30 @@ export const useCharacterStore = defineStore('character', () => {
 
     function removeSpell(id: string) {
         const index = character.value.spellcasting.spells.findIndex((s) => s.id === id)
-        if (index !== -1) {
-            character.value.spellcasting.spells.splice(index, 1)
-        }
+        if (index !== -1) character.value.spellcasting.spells.splice(index, 1)
     }
 
-    // Initialize derived values on load
     updateDerivedValues()
+
+    // Initialize
+    listCharacters().then(() => {
+        if (currentFileName.value) {
+            loadCharacter(currentFileName.value)
+        }
+    })
 
     return {
         character,
+        characters,
+        currentFileName,
         lastSaved,
+        isLoading,
+        nameError,
         proficiencyBonus,
-        resetCharacter,
+        listCharacters,
+        loadCharacter,
+        deleteCharacter,
+        newCharacter,
         addAttack,
         removeAttack,
         addSpell,

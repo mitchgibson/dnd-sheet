@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useCharacterStore } from '@/stores/character'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import InfoIcon from '@/components/InfoIcon.vue'
 import SpellNotesModal from '@/components/SpellNotesModal.vue'
+import CharacterListModal from '@/components/CharacterListModal.vue'
 import type { AbilityName } from '@/types/character'
 import { SKILLS_BY_ABILITY } from '@/types/character'
 
@@ -50,14 +51,12 @@ function getSlotKey(level: number): keyof typeof store.character.spellcasting.sp
 
 const lastSavedText = computed(() => {
   if (!store.lastSaved) return ''
-  return `Saved ${store.lastSaved.toLocaleTimeString()}`
+  return `Auto-saved ${store.lastSaved.toLocaleTimeString()}`
 })
 
-function handleReset() {
-  if (confirm('Reset all character data?')) {
-    store.resetCharacter()
-  }
-}
+onMounted(() => {
+  store.listCharacters()
+})
 </script>
 
 <template>
@@ -67,7 +66,7 @@ function handleReset() {
       <h1>D&D 2024 Character Sheet</h1>
       <div class="header-right">
         <span v-if="lastSavedText" class="saved-text">{{ lastSavedText }}</span>
-        <Button variant="destructive" size="sm" @click="handleReset">Reset</Button>
+        <CharacterListModal />
       </div>
     </header>
 
@@ -83,7 +82,8 @@ function handleReset() {
         <div class="header-row">
           <div class="header-field name-field">
             <span class="field-label">CHARACTER NAME <InfoIcon field="characterName" /></span>
-            <Input v-model="store.character.name" />
+            <Input v-model="store.character.name" :class="{ 'input-error': store.nameError }" />
+            <span v-if="store.nameError" class="name-error">{{ store.nameError }}</span>
           </div>
           <div class="header-field">
             <span class="field-label">BACKGROUND <InfoIcon field="background" /></span>
@@ -396,7 +396,9 @@ body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
 .header-field.name-field { flex: 2; }
 .header-field.small { flex: 0 0 80px; }
 .header-field :deep(input) { height: 38px; font-size: 0.95rem; }
+.header-field :deep(input.input-error) { border-color: hsl(0 84% 60%); }
 .field-label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: var(--muted-foreground); }
+.name-error { color: hsl(0 84% 60%); font-size: 0.75rem; font-weight: 500; }
 
 /* Combat row */
 .combat-row { display: flex; gap: 0.75rem; }
