@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
+import InfoIcon from '@/components/InfoIcon.vue'
+import SpellNotesModal from '@/components/SpellNotesModal.vue'
 import type { AbilityName } from '@/types/character'
 import { SKILLS_BY_ABILITY } from '@/types/character'
 
@@ -80,45 +82,46 @@ function handleReset() {
         <!-- Top Header Row -->
         <div class="header-row">
           <div class="header-field name-field">
+            <span class="field-label">CHARACTER NAME <InfoIcon field="characterName" /></span>
             <Input v-model="store.character.name" />
-            <span class="field-label">CHARACTER NAME</span>
           </div>
           <div class="header-field">
+            <span class="field-label">BACKGROUND <InfoIcon field="background" /></span>
             <Input v-model="store.character.background" />
-            <span class="field-label">BACKGROUND</span>
           </div>
           <div class="header-field">
+            <span class="field-label">CLASS <InfoIcon field="class" /></span>
             <Input v-model="store.character.class" />
-            <span class="field-label">CLASS</span>
           </div>
           <div class="header-field small">
+            <span class="field-label">LEVEL <InfoIcon field="level" /></span>
             <Input v-model.number="store.character.level" type="number" min="1" max="20" />
-            <span class="field-label">LEVEL</span>
           </div>
         </div>
 
         <div class="header-row">
           <div class="header-field">
+            <span class="field-label">SPECIES <InfoIcon field="species" /></span>
             <Input v-model="store.character.species" />
-            <span class="field-label">SPECIES</span>
           </div>
           <div class="header-field">
+            <span class="field-label">SUBCLASS <InfoIcon field="subclass" /></span>
             <Input v-model="store.character.subclass" />
-            <span class="field-label">SUBCLASS</span>
           </div>
           <div class="header-field small">
+            <span class="field-label">XP <InfoIcon field="xp" /></span>
             <Input v-model.number="store.character.experiencePoints" type="number" min="0" />
-            <span class="field-label">XP</span>
           </div>
         </div>
 
         <!-- Combat Stats Row -->
         <div class="combat-row">
           <div class="combat-box">
+            <span class="box-label">ARMOR CLASS <InfoIcon field="armorClass" /></span>
             <Input v-model.number="store.character.combat.armorClass" type="number" class="big-input" />
-            <span class="box-label">ARMOR CLASS</span>
           </div>
           <div class="combat-box">
+            <span class="box-label">HIT POINTS <InfoIcon field="hitPoints" /></span>
             <div class="hp-grid">
               <div class="hp-cell">
                 <Input v-model.number="store.character.combat.hitPointCurrent" type="number" />
@@ -133,16 +136,16 @@ function handleReset() {
                 <span>Max</span>
               </div>
             </div>
-            <span class="box-label">HIT POINTS</span>
           </div>
           <div class="combat-box">
+            <span class="box-label">HIT DICE <InfoIcon field="hitDice" /></span>
             <div class="dice-grid">
               <Input v-model="store.character.combat.hitDiceSpent" placeholder="0" />
               <Input v-model="store.character.combat.hitDiceMax" placeholder="1d10" />
             </div>
-            <span class="box-label">HIT DICE (Spent / Max)</span>
           </div>
           <div class="combat-box">
+            <span class="box-label">DEATH SAVES <InfoIcon field="deathSaves" /></span>
             <div class="death-saves">
               <div class="death-line">
                 <span>Success</span>
@@ -161,17 +164,16 @@ function handleReset() {
                 ></span>
               </div>
             </div>
-            <span class="box-label">DEATH SAVES</span>
           </div>
         </div>
 
         <!-- Stats Row -->
         <div class="stats-row">
-          <div class="stat-box"><div class="stat-val">+{{ store.proficiencyBonus }}</div><span>PROFICIENCY</span></div>
-          <div class="stat-box"><div class="stat-val">{{ formatMod(store.character.combat.initiative) }}</div><span>INITIATIVE</span></div>
-          <div class="stat-box"><Input v-model.number="store.character.combat.speed" type="number" /><span>SPEED</span></div>
-          <div class="stat-box"><Input v-model="store.character.combat.size" /><span>SIZE</span></div>
-          <div class="stat-box"><div class="stat-val">{{ store.character.combat.passivePerception }}</div><span>PASSIVE PERCEPTION</span></div>
+          <div class="stat-box"><div class="stat-val">+{{ store.proficiencyBonus }}</div><span>PROFICIENCY <InfoIcon field="proficiencyBonus" /></span></div>
+          <div class="stat-box"><div class="stat-val">{{ formatMod(store.character.combat.initiative) }}</div><span>INITIATIVE <InfoIcon field="initiative" /></span></div>
+          <div class="stat-box"><Input v-model.number="store.character.combat.speed" type="number" /><span>SPEED <InfoIcon field="speed" /></span></div>
+          <div class="stat-box"><Input v-model="store.character.combat.size" /><span>SIZE <InfoIcon field="size" /></span></div>
+          <div class="stat-box"><div class="stat-val">{{ store.character.combat.passivePerception }}</div><span>PASSIVE PERC. <InfoIcon field="passivePerception" /></span></div>
         </div>
 
         <!-- Main Content -->
@@ -179,7 +181,7 @@ function handleReset() {
           <!-- Left: Abilities -->
           <div class="abilities-column">
             <div v-for="ability in abilities" :key="ability.key" class="ability-block">
-              <div class="ability-header">{{ ability.label }}</div>
+              <div class="ability-header">{{ ability.label }} <InfoIcon :field="ability.key" /></div>
               <div class="ability-content">
                 <div class="score-area">
                   <div class="modifier">{{ formatMod(store.character.abilityScores[ability.key].modifier) }}</div>
@@ -193,7 +195,7 @@ function handleReset() {
                   <div class="skill-line" @click="store.character.abilityScores[ability.key].savingThrowProficiency = !store.character.abilityScores[ability.key].savingThrowProficiency">
                     <span class="prof">{{ store.character.abilityScores[ability.key].savingThrowProficiency ? '●' : '○' }}</span>
                     <span class="bonus">{{ formatMod(store.character.abilityScores[ability.key].savingThrowBonus) }}</span>
-                    <span class="name">Saving Throw</span>
+                    <span class="name">Saving Throw <InfoIcon field="savingThrow" @click.stop /></span>
                   </div>
                   <div v-for="skillName in SKILLS_BY_ABILITY[ability.key]" :key="skillName" class="skill-line" @click="toggleSkillProf(skillName)">
                     <span class="prof">
@@ -202,7 +204,7 @@ function handleReset() {
                       <template v-else>○</template>
                     </span>
                     <span class="bonus">{{ formatMod(getSkill(skillName)?.bonus || 0) }}</span>
-                    <span class="name">{{ skillName }}</span>
+                    <span class="name">{{ skillName }} <InfoIcon field="skillProficiency" @click.stop /></span>
                   </div>
                 </div>
               </div>
@@ -211,12 +213,12 @@ function handleReset() {
             <!-- Heroic Inspiration -->
             <div class="inspiration-box" @click="store.character.heroicInspiration = !store.character.heroicInspiration">
               <span class="insp-icon">{{ store.character.heroicInspiration ? '★' : '☆' }}</span>
-              <span>HEROIC INSPIRATION</span>
+              <span>HEROIC INSPIRATION <InfoIcon field="heroicInspiration" @click.stop /></span>
             </div>
 
             <!-- Equipment Proficiencies -->
             <div class="prof-box">
-              <div class="prof-title">EQUIPMENT TRAINING & PROFICIENCIES</div>
+              <div class="prof-title">EQUIPMENT TRAINING & PROFICIENCIES <InfoIcon field="armorTraining" /></div>
               <div class="armor-row">
                 <span>Armor:</span>
                 <label><Checkbox :checked="store.character.equipmentProficiencies.armorLight" @update:checked="store.character.equipmentProficiencies.armorLight = $event" /> Light</label>
@@ -224,8 +226,8 @@ function handleReset() {
                 <label><Checkbox :checked="store.character.equipmentProficiencies.armorHeavy" @update:checked="store.character.equipmentProficiencies.armorHeavy = $event" /> Heavy</label>
                 <label><Checkbox :checked="store.character.equipmentProficiencies.armorShields" @update:checked="store.character.equipmentProficiencies.armorShields = $event" /> Shields</label>
               </div>
-              <div class="prof-field"><span>Weapons:</span><Input v-model="store.character.equipmentProficiencies.weapons" /></div>
-              <div class="prof-field"><span>Tools:</span><Input v-model="store.character.equipmentProficiencies.tools" /></div>
+              <div class="prof-field"><span>Weapons: <InfoIcon field="weaponProficiency" /></span><Textarea v-model="store.character.equipmentProficiencies.weapons" rows="2" placeholder="Simple weapons, martial weapons..." /></div>
+              <div class="prof-field"><span>Tools: <InfoIcon field="toolProficiency" /></span><Textarea v-model="store.character.equipmentProficiencies.tools" rows="2" placeholder="Thieves' tools, herbalism kit..." /></div>
             </div>
           </div>
 
@@ -253,18 +255,18 @@ function handleReset() {
 
             <!-- Class Features -->
             <div class="section-box">
-              <div class="section-title">CLASS FEATURES</div>
+              <div class="section-title">CLASS FEATURES <InfoIcon field="classFeatures" /></div>
               <Textarea v-model="store.character.classFeatures" rows="6" />
             </div>
 
             <!-- Species Traits / Feats -->
             <div class="two-col">
               <div class="section-box">
-                <div class="section-title">SPECIES TRAITS</div>
+                <div class="section-title">SPECIES TRAITS <InfoIcon field="speciesTraits" /></div>
                 <Textarea v-model="store.character.speciesTraits" rows="4" />
               </div>
               <div class="section-box">
-                <div class="section-title">FEATS</div>
+                <div class="section-title">FEATS <InfoIcon field="feats" /></div>
                 <Textarea v-model="store.character.feats" rows="4" />
               </div>
             </div>
@@ -278,14 +280,14 @@ function handleReset() {
           <!-- Left: Spellcasting -->
           <div class="spell-column">
             <div class="spell-stats-box">
-              <div class="spell-stat"><Input v-model="store.character.spellcasting.ability" /><span>ABILITY</span></div>
+              <div class="spell-stat"><Input v-model="store.character.spellcasting.ability" /><span>ABILITY <InfoIcon field="spellcastingAbility" /></span></div>
               <div class="spell-stat"><Input v-model.number="store.character.spellcasting.spellcastingModifier" type="number" /><span>MODIFIER</span></div>
               <div class="spell-stat"><Input v-model.number="store.character.spellcasting.saveDC" type="number" /><span>SAVE DC</span></div>
               <div class="spell-stat"><Input v-model.number="store.character.spellcasting.attackBonus" type="number" /><span>ATK BONUS</span></div>
             </div>
 
             <div class="slots-box">
-              <div class="section-title">SPELL SLOTS</div>
+              <div class="section-title">SPELL SLOTS <InfoIcon field="spellSlots" /></div>
               <div class="slots-grid">
                 <div v-for="lvl in 9" :key="lvl" class="slot-item">
                   <span class="slot-lvl">{{ lvl }}</span>
@@ -302,9 +304,9 @@ function handleReset() {
             </div>
 
             <div class="spells-box">
-              <div class="section-title">CANTRIPS & PREPARED SPELLS</div>
+              <div class="section-title">CANTRIPS & PREPARED SPELLS <InfoIcon field="spellMarkers" /></div>
               <table class="spell-table">
-                <thead><tr><th>Lv</th><th>Name</th><th>Time</th><th>Range</th><th>C</th><th>R</th><th>M</th><th></th></tr></thead>
+                <thead><tr><th class="col-lv">Lv</th><th>Name</th><th>Time</th><th>Range</th><th>C</th><th>R</th><th>M</th><th>Notes</th><th></th></tr></thead>
                 <tbody>
                   <tr v-for="sp in store.character.spellcasting.spells" :key="sp.id">
                     <td><Input :model-value="sp.level" @update:model-value="sp.level = Number($event)" type="number" min="0" max="9" /></td>
@@ -314,6 +316,7 @@ function handleReset() {
                     <td><span class="crm" :class="{on: sp.concentration}" @click="sp.concentration = !sp.concentration">◇</span></td>
                     <td><span class="crm" :class="{on: sp.ritual}" @click="sp.ritual = !sp.ritual">◇</span></td>
                     <td><span class="crm" :class="{on: sp.material}" @click="sp.material = !sp.material">◇</span></td>
+                    <td><SpellNotesModal :spell="sp" /></td>
                     <td><Button variant="ghost" size="sm" @click="store.removeSpell(sp.id)">✕</Button></td>
                   </tr>
                 </tbody>
@@ -324,13 +327,13 @@ function handleReset() {
 
           <!-- Right: Character Info -->
           <div class="info-column">
-            <div class="section-box"><div class="section-title">APPEARANCE</div><Textarea v-model="store.character.personality.appearance" rows="4" /></div>
-            <div class="section-box"><div class="section-title">ALIGNMENT</div><Input v-model="store.character.personality.alignment" /></div>
-            <div class="section-box"><div class="section-title">BACKSTORY & PERSONALITY</div><Textarea v-model="store.character.personality.backstoryAndPersonality" rows="8" /></div>
-            <div class="section-box"><div class="section-title">LANGUAGES</div><Textarea v-model="store.character.personality.languages" rows="2" /></div>
-            <div class="section-box"><div class="section-title">EQUIPMENT</div><Textarea v-model="store.character.equipment" rows="6" /></div>
+            <div class="section-box"><div class="section-title">APPEARANCE <InfoIcon field="appearance" /></div><Textarea v-model="store.character.personality.appearance" rows="4" /></div>
+            <div class="section-box"><div class="section-title">ALIGNMENT <InfoIcon field="alignment" /></div><Input v-model="store.character.personality.alignment" /></div>
+            <div class="section-box"><div class="section-title">BACKSTORY & PERSONALITY <InfoIcon field="backstory" /></div><Textarea v-model="store.character.personality.backstoryAndPersonality" rows="8" /></div>
+            <div class="section-box"><div class="section-title">LANGUAGES <InfoIcon field="languages" /></div><Textarea v-model="store.character.personality.languages" rows="2" /></div>
+            <div class="section-box"><div class="section-title">EQUIPMENT <InfoIcon field="equipment" /></div><Textarea v-model="store.character.equipment" rows="6" /></div>
             <div class="section-box">
-              <div class="section-title">MAGIC ITEM ATTUNEMENT</div>
+              <div class="section-title">MAGIC ITEM ATTUNEMENT <InfoIcon field="magicItemAttunement" /></div>
               <div class="attune-list">
                 <div class="attune-item"><span>◇</span><Input v-model="store.character.magicItemAttunement.slot1" /></div>
                 <div class="attune-item"><span>◇</span><Input v-model="store.character.magicItemAttunement.slot2" /></div>
@@ -338,7 +341,7 @@ function handleReset() {
               </div>
             </div>
             <div class="section-box">
-              <div class="section-title">COINS</div>
+              <div class="section-title">COINS <InfoIcon field="coins" /></div>
               <div class="coins-row">
                 <div class="coin"><Input v-model.number="store.character.coins.copper" type="number" min="0" /><span>CP</span></div>
                 <div class="coin"><Input v-model.number="store.character.coins.silver" type="number" min="0" /><span>SP</span></div>
@@ -426,9 +429,9 @@ body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
 .ability-block { background: var(--card); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
 .ability-header { background: var(--muted); padding: 0.375rem 0.75rem; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; }
 .ability-content { display: flex; padding: 0.5rem; gap: 0.75rem; }
-.score-area { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; min-width: 70px; }
+.score-area { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; min-width: 80px; }
 .modifier { font-size: 1.5rem; font-weight: 700; }
-.score-input { width: 50px; height: 32px; text-align: center; }
+.score-area :deep(input) { width: 70px !important; min-width: 70px; height: 36px; text-align: center; font-size: 0.9rem; font-weight: 600; }
 .skills-area { flex: 1; display: flex; flex-direction: column; gap: 0.125rem; }
 .skill-line { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.375rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
 .skill-line:hover { background: var(--muted); }
@@ -445,9 +448,9 @@ body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
 .prof-title { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; color: var(--muted-foreground); }
 .armor-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; font-size: 0.85rem; margin-bottom: 0.5rem; }
 .armor-row label { display: flex; align-items: center; gap: 0.25rem; cursor: pointer; }
-.prof-field { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; margin-bottom: 0.375rem; }
-.prof-field span { min-width: 55px; }
-.prof-field :deep(input) { flex: 1; height: 32px; }
+.prof-field { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; margin-bottom: 0.5rem; }
+.prof-field span { font-weight: 600; }
+.prof-field :deep(input), .prof-field :deep(textarea) { width: 100%; }
 
 /* Section boxes */
 .section-box { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; }
@@ -472,19 +475,21 @@ body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
 .spell-stat span { display: block; font-size: 0.55rem; font-weight: 600; text-transform: uppercase; color: var(--muted-foreground); margin-top: 0.25rem; }
 
 .slots-box { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; }
-.slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
-.slot-item { display: flex; align-items: center; gap: 0.375rem; }
-.slot-lvl { font-weight: 700; font-size: 0.8rem; min-width: 20px; }
-.slot-input { width: 40px; height: 28px; text-align: center; font-size: 0.85rem; }
-.slot-marks { display: flex; gap: 0.125rem; }
-.slot-mark { cursor: pointer; color: var(--muted-foreground); }
+.slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+.slot-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: var(--muted); border-radius: 4px; }
+.slot-lvl { font-weight: 700; font-size: 1rem; min-width: 24px; color: var(--primary); }
+.slot-item :deep(input) { width: 70px !important; min-width: 70px; height: 36px !important; text-align: center; font-size: 1rem; font-weight: 600; }
+.slot-marks { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+.slot-mark { cursor: pointer; color: var(--muted-foreground); font-size: 1.25rem; }
 .slot-mark.used { color: var(--primary); }
 
 .spells-box { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; flex: 1; }
 .spell-table { width: 100%; border-collapse: collapse; margin-bottom: 0.5rem; }
-.spell-table th { text-align: left; font-size: 0.55rem; font-weight: 600; text-transform: uppercase; color: var(--muted-foreground); padding: 0.25rem; border-bottom: 1px solid var(--border); }
+.spell-table th { text-align: left; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: var(--muted-foreground); padding: 0.25rem; border-bottom: 1px solid var(--border); }
 .spell-table td { padding: 0.25rem; }
-.spell-table :deep(input) { height: 28px; font-size: 0.8rem; }
+.spell-table .col-lv { width: 60px; }
+.spell-table td:first-child :deep(input) { width: 60px !important; min-width: 60px; }
+.spell-table :deep(input) { height: 36px; font-size: 0.9rem; }
 .crm { cursor: pointer; color: var(--muted-foreground); }
 .crm.on { color: var(--primary); }
 
